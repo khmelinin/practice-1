@@ -7,9 +7,15 @@
     <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
     <meta name="generator" content="Hugo 0.88.1">
     <title>Starter Template · Bootstrap v5.1</title>
+
     <link rel="canonical" href="https://getbootstrap.com/docs/5.1/examples/starter-template/">
+
+
+
     <!-- Bootstrap core CSS -->
     <link href="https://getbootstrap.com/docs/5.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+
+
     <!-- Favicons -->
     <link rel="apple-touch-icon" href="https://getbootstrap.com/docs/5.1/assets/img/favicons/apple-touch-icon.png" sizes="180x180">
     <link rel="icon" href="https://getbootstrap.com/docs/5.1/assets/img/favicons/favicon-32x32.png" sizes="32x32" type="image/png">
@@ -18,6 +24,8 @@
     <link rel="mask-icon" href="https://getbootstrap.com/docs/5.1/assets/img/favicons/safari-pinned-tab.svg" color="#7952b3">
     <link rel="icon" href="https://getbootstrap.com/docs/5.1/assets/img/favicons/favicon.ico">
     <meta name="theme-color" content="#7952b3">
+
+
     <style>
         .bd-placeholder-img {
             font-size: 1.125rem;
@@ -26,17 +34,21 @@
             -moz-user-select: none;
             user-select: none;
         }
+
         @media (min-width: 768px) {
             .bd-placeholder-img-lg {
                 font-size: 3.5rem;
             }
         }
     </style>
+
+
     <!-- Custom styles for this template -->
     <link href="starter-template.css" rel="stylesheet">
     <link href="/css/main.css" rel="stylesheet">
 </head>
 <body>
+
 <div class="col-lg-8 mx-auto p-3 py-md-5">
     <header class="d-flex align-items-center pb-3 mb-5 border-bottom">
         <a href="/" class="d-flex align-items-center text-dark text-decoration-none">
@@ -44,42 +56,53 @@
             <span class="fs-4">Chat example</span>
         </a>
     </header>
+
     <main>
-        <table style="border: 1px solid red; width: 100%">
-            <tr style="">
-                <td style="width: 50%">
-                    24 Jan 2022[21:09] from Lena@gmail.com: <br>
-                    Добрый Вечер!
-                </td>
-                <td>
-                </td>
-            </tr>
-            <tr style="">
-                <td style="">
-                </td>
-                <td style="text-align: end">
-                    24 Jan 2022[21:10] from pekhota.alex@gmail.com: <br>
-                    Добрый!
-                </td>
-            </tr>
-            <tr style="">
-                <td style="">
-                </td>
-                <td style="text-align: end">
-                    24 Jan 2022[21:11] from pekhota.alex@gmail.com: <br>
-                    Домашку сделали?
-                </td>
-            </tr>
-        </table>
+        <div id="table-content">
+            <table style="border: 1px solid red; width: 100%">
+                @foreach($rows as $row)
+                    @if($row->author!="pekhota.alex@gmail.com")
+                        <tr style="">
+                            <td style="">
+                            </td>
+                            <td style="text-align: end">
+                                {{ $row->created_at }} from {{ $row->author }}.: <br>
+                                {{ $row->message }}
+                                <hr>
+                            </td>
+                        </tr>
+                    @else
+                        <tr style="">
+                            <td style="width: 50%">
+                                {{ $row->created_at }} from {{ $row->author }}.: <br>
+                                {{ $row->message }}
+                                <hr>
+                            </td>
+                            <td>
+                            </td>
+                        </tr>
+                    @endif
+                @endforeach
+            </table>
+        </div>
+
+
         <br>
+
         <form id="target" method="POST" action="/pages">
             @csrf
             <label>
-                <textarea name="message">
+                <input type="text" name="author" placeholder="Enter your email" value="">
+            </label>
+            <br>
+            <br>
+            <label>
+                <textarea id="form_message" name="message">
                     Enter your message
                 </textarea>
             </label>
             <br>
+
             <input type="submit" value="enter message">
         </form>
     </main>
@@ -87,15 +110,58 @@
         Created by the Elena and team &middot; &copy; 2021
     </footer>
 </div>
+
+
 <script src="https://getbootstrap.com/docs/5.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous"></script>
 <script>
     $(function() {
-        $( "#target" ).submit(function( event ) {
-            alert( "Handler for .submit() called." );
+
+        function getFormData($form){
+            /**
+             * [
+             {"name":"message","value":"Enter your message"},
+             ]
+             */
+            var unindexed_array = $form.serializeArray();
+            var indexed_array = {};
+
+            $.map(unindexed_array, function(n, i){
+                indexed_array[n['name']] = n['value'];
+            });
+            /**
+             * {
+             *   "message" : "Enter your message"
+             * }
+             */
+            return indexed_array;
+        }
+
+        function getChatData() {
+            $.get("/table", function (data) {
+                $("#table-content").html(data)
+            })
+        }
+
+        setInterval(function () {
+            getChatData()
+            console.log(1)
+        }, 1000)
+
+        let form = $( "#target" )
+        form.submit(function( event ) {
             event.preventDefault();
+
+            let formData = getFormData(form)
+            $.post("/pages", formData, function (data) {
+                console.log(data)
+                $("#form_message").val("")
+
+                getChatData()
+            })
         });
+
+
+
     });
 </script>
-</body>
-</html>
